@@ -2,17 +2,15 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
-	"os"
 	"time"
 )
 
-type BranchType uint8
+type BranchType string
 
 const (
-	BranchTypeMain BranchType = iota
-	BranchTypeFeature
-	BranchTypeRelease
+	BranchTypeMain    BranchType = "main"
+	BranchTypeFeature            = "feature"
+	BranchTypeRelease            = "release"
 )
 
 type Branch struct {
@@ -24,16 +22,27 @@ type Branch struct {
 	BranchType BranchType `json:"type"`
 }
 
-func LoadBranches() []*Branch {
+type Branches []*Branch
+
+func (bt *BranchType) ToColour() string {
+	switch *bt {
+	case BranchTypeFeature:
+		return "red"
+	case BranchTypeRelease:
+		return "green"
+	case BranchTypeMain:
+		return "#000"
+	default:
+		return "#000"
+	}
+}
+
+func (this *Branches) UnmarshalJSON(b []byte) error {
 	var branches []*Branch
 
-	r, _ := os.Open("branches.json")
-	defer r.Close()
-
-	d := json.NewDecoder(r)
-	err := d.Decode(&branches)
+	err := json.Unmarshal(b, &branches)
 	if err != nil {
-		fmt.Println(err)
+		return err
 	}
 
 	// Create a name -> *Branch map to save repeated looping
@@ -45,13 +54,13 @@ func LoadBranches() []*Branch {
 	for i, b := range branches {
 		branches[i].Order = i + 1
 		branches[i].Parent = hash[b.ParentName]
+		*this = append(*this, branches[i])
 	}
 
-	return branches
-
-	// dev := &Branch{2, "Dev", "", nil, time.Now(), BranchTypeMain}
-	// f1 := &Branch{1, "Feature 1", "Dev", dev, time.Now().AddDate(0, 0, 14), BranchTypeFeature}
-	// r11 := &Branch{3, "Release 11", "Dev", dev, time.Now(), BranchTypeRelease}
-
-	// return []*Branch{f1, dev, r11}
+	return nil
 }
+
+// func (branch *Branch) UnmarshalJSON(b []byte) error {
+// 	fmt.Println("Branch Unmarshal")
+// 	return nil
+// }

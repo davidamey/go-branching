@@ -6,18 +6,12 @@ import (
 )
 
 func main() {
-	f, err := os.Create("out.svg")
+	w, err := os.Create("out.svg")
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer f.Close()
+	defer w.Close()
 
-	d := NewDiagram(f, 891, 630, LoadBranches())
-
-	for _, b := range d.Branches {
-		d.DrawBranch(b)
-	}
-
-	d.DrawWeekBars()
-	d.Canvas.End()
+	d := NewDiagram("ngba.json", w)
+	d.Draw()
 }
