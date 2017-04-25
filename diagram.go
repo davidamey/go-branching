@@ -18,6 +18,7 @@ type Diagram struct {
 	Width    int       `json:"width"`
 	Height   int       `json:"height"`
 	Branches Branches  `json:"branches"`
+	Merges   []Merge   `json:"merges"`
 
 	// Computed
 	Canvas     *svg.SVG
@@ -45,25 +46,6 @@ func NewDiagram(cfg string, w io.Writer) *Diagram {
 	return &diagram
 }
 
-func ToWeekEnd(t time.Time) time.Time {
-	switch t.Weekday() {
-	case time.Sunday:
-		return t.AddDate(0, 0, 5)
-	case time.Monday:
-		return t.AddDate(0, 0, 4)
-	case time.Tuesday:
-		return t.AddDate(0, 0, 3)
-	case time.Wednesday:
-		return t.AddDate(0, 0, 2)
-	case time.Thursday:
-		return t.AddDate(0, 0, 1)
-	case time.Saturday:
-		return t.AddDate(0, 0, 6)
-	default:
-		return t
-	}
-}
-
 func (d *Diagram) Draw() {
 	d.Canvas.Start(d.Width, d.Height)
 	defer d.Canvas.End()
@@ -78,14 +60,15 @@ func (d *Diagram) Draw() {
 	d.Canvas.Marker("arrow-release", 0, 3, 10, 10, `orient="auto"`, `markerUnits="strokeWidth"`)
 	d.Canvas.Path("M0,0 L0,6 L9,3 z", `fill="green"`)
 	d.Canvas.MarkerEnd()
+	d.Canvas.Marker("arrow-live", 0, 3, 10, 10, `orient="auto"`, `markerUnits="strokeWidth"`)
+	d.Canvas.Path("M0,0 L0,6 L9,3 z", `fill="purple"`)
+	d.Canvas.MarkerEnd()
 	d.Canvas.DefEnd()
 
 	d.Canvas.Rect(0, 0, d.Width, d.Height, "stroke:#CCC;fill:#FFF")
 	d.DrawWeekBars()
-
-	for _, b := range d.Branches {
-		d.DrawBranch(b)
-	}
+	d.DrawBranches()
+	d.DrawMerges()
 }
 
 func (d *Diagram) DrawWeekBars() {
@@ -113,27 +96,87 @@ func (d *Diagram) DrawWeekBars() {
 	}
 }
 
-func (d *Diagram) DrawBranch(b *Branch) {
-	y := b.Order * d.YOffset
+func (d *Diagram) DrawBranches() {
+	for _, b := range d.Branches {
+		y := b.Order * d.YOffset
 
-	d.Canvas.Text(10, y+5, b.Name, "font-family:arial;")
+		d.Canvas.Text(10, y+5, b.Name, `font-family="arial"`)
 
-	stroke := fmt.Sprintf(`stroke="%s"`, b.BranchType.ToColour())
-	dashStroke := `stroke-dasharray="5,5"`
+		stroke := StrokeForBranch(b)
 
-	x := d.LabelWidth
-	if b.Created.After(d.Start) {
-		dx := (d.Width - d.LabelWidth) / (7 * d.Weeks)
-		xOff := int(b.Created.Sub(d.Start).Hours()) / 24
-		x = x + xOff*dx
-		d.Canvas.Line(d.LabelWidth, y, x, y, stroke, dashStroke)
+		x1 := d.TimeToX(b.Start)
+		if x1 > d.LabelWidth {
+			d.Canvas.Line(d.LabelWidth, y, x1, y, `stroke="black"`, `stroke-dasharray="5"`)
 
-		// If we have a parent, draw the branching line
-		if b.Parent != nil {
-			d.Canvas.Line(x, b.Parent.Order*d.YOffset, x, y, stroke)
+			// If we have a parent, draw the branching line
+			if b.Parent != nil {
+				d.Canvas.Line(x1, b.Parent.Order*d.YOffset, x1, y, stroke)
+			}
 		}
-	}
 
-	// Arrow trunk
-	d.Canvas.Line(x, y, d.Width-10, y, stroke, fmt.Sprintf(`marker-end="url(#arrow-%s)"`, b.BranchType))
+		// x2 := d.TimeToX(b.End)
+
+		// Arrow
+		d.Canvas.Line(x1, y, d.Width-10, y, stroke, ArrowForBranch(b))
+	}
+}
+
+func (d *Diagram) TimeToX(t time.Time) int {
+	x := d.LabelWidth
+	if t.After(d.Start) {
+		dx := (d.Width - d.LabelWidth) / (7 * d.Weeks)
+		xOff := int(t.Sub(d.Start).Hours()) / 24
+		x = x + xOff*dx
+	}
+	return x
+}
+
+func (d *Diagram) DrawMerges() {
+	for _, m := range d.Merges {
+		b1 := d.Branches[m.From]
+		b2 := d.Branches[m.To]
+
+		y1 := b1.Order * d.YOffset
+		y2 := b2.Order * d.YOffset
+		x := d.TimeToX(m.Date)
+
+		// Offset y2 for arrow
+		if y2 > y1 {
+			y2 = y2 - 10
+		} else {
+			y2 = y2 + 10
+		}
+
+		d.Canvas.Line(x, y1, x, y2,
+			`stroke-dasharray="2"`,
+			StrokeForBranch(b2),
+			ArrowForBranch(b2))
+	}
+}
+
+func StrokeForBranch(b *Branch) string {
+	return fmt.Sprintf(`stroke="%s"`, b.BranchType.ToColour())
+}
+
+func ArrowForBranch(b *Branch) string {
+	return fmt.Sprintf(`marker-end="url(#arrow-%s)"`, b.BranchType)
+}
+
+func ToWeekEnd(t time.Time) time.Time {
+	switch t.Weekday() {
+	case time.Sunday:
+		return t.AddDate(0, 0, 5)
+	case time.Monday:
+		return t.AddDate(0, 0, 4)
+	case time.Tuesday:
+		return t.AddDate(0, 0, 3)
+	case time.Wednesday:
+		return t.AddDate(0, 0, 2)
+	case time.Thursday:
+		return t.AddDate(0, 0, 1)
+	case time.Saturday:
+		return t.AddDate(0, 0, 6)
+	default:
+		return t
+	}
 }

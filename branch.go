@@ -8,9 +8,10 @@ import (
 type BranchType string
 
 const (
-	BranchTypeMain    BranchType = "main"
-	BranchTypeFeature            = "feature"
-	BranchTypeRelease            = "release"
+	BranchTypeMain        BranchType = "main"
+	BranchTypeFeature                = "feature"
+	BranchTypeRelease                = "release"
+	BranchTypeReleaseLive            = "live"
 )
 
 type Branch struct {
@@ -18,11 +19,12 @@ type Branch struct {
 	Name       string     `json:"name"`
 	ParentName string     `json:"parent"`
 	Parent     *Branch    `json:"-"`
-	Created    time.Time  `json:"created"`
+	Start      time.Time  `json:"start"`
+	End        time.Time  `json:"end"`
 	BranchType BranchType `json:"type"`
 }
 
-type Branches []*Branch
+type Branches map[string]*Branch
 
 func (bt *BranchType) ToColour() string {
 	switch *bt {
@@ -30,6 +32,8 @@ func (bt *BranchType) ToColour() string {
 		return "red"
 	case BranchTypeRelease:
 		return "green"
+	case BranchTypeReleaseLive:
+		return "purple"
 	case BranchTypeMain:
 		return "#000"
 	default:
@@ -46,15 +50,14 @@ func (this *Branches) UnmarshalJSON(b []byte) error {
 	}
 
 	// Create a name -> *Branch map to save repeated looping
-	hash := make(map[string]*Branch)
+	*this = make(map[string]*Branch)
 	for i, b := range branches {
-		hash[b.Name] = branches[i]
+		(*this)[b.Name] = branches[i]
 	}
 
 	for i, b := range branches {
 		branches[i].Order = i + 1
-		branches[i].Parent = hash[b.ParentName]
-		*this = append(*this, branches[i])
+		branches[i].Parent = (*this)[b.ParentName]
 	}
 
 	return nil

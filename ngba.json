@@ -8,31 +8,37 @@
         {
             "name": "Feature 1",
             "parent": "Dev",
-            "created": "2017-05-07T00:00:00.000Z",
+            "start": "2017-05-07T00:00:00.000Z",
+            "type": "feature"
+        },
+        {
+            "name": "Feature 2b",
+            "parent": "Feature 2",
+            "start": "2017-05-21T00:00:00.000Z",
             "type": "feature"
         },
         {
             "name": "Feature 2",
             "parent": "Dev",
-            "created": "2017-05-14T00:00:00.000Z",
+            "start": "2017-05-14T00:00:00.000Z",
             "type": "feature"
         },
         {
             "name": "Dev",
             "parent": "",
-            "created": "2017-04-24T00:00:00.000Z",
+            "start": "2017-04-24T00:00:00.000Z",
             "type": "main"
         },
         {
             "name": "Release 11",
             "parent": "Dev",
-            "created": "2017-04-24T00:00:00.000Z",
-            "type": "release"
+            "start": "2017-04-24T00:00:00.000Z",
+            "type": "live"
         },
         {
             "name": "Release 12",
             "parent": "Dev",
-            "created": "2017-05-24T00:00:00.000Z",
+            "start": "2017-05-24T00:00:00.000Z",
             "type": "release"
         }
     ],
@@ -41,6 +47,26 @@
             "date": "2017-06-01T00:00:00.000Z",
             "from": "Dev",
             "to": "Feature 1"
+        },
+        {
+            "date": "2017-06-01T00:00:00.000Z",
+            "from": "Dev",
+            "to": "Feature 2"
+        },
+        {
+            "date": "2017-06-24T00:00:00.000Z",
+            "from": "Feature 2",
+            "to": "Feature 2b"
+        },
+        {
+            "date": "2017-06-28T00:00:00.000Z",
+            "from": "Feature 2",
+            "to": "Feature 2b"
+        },
+        {
+            "date": "2017-06-30T00:00:00.000Z",
+            "from": "Feature 2",
+            "to": "Dev"
         }
     ]
 }
