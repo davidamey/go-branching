@@ -114,10 +114,13 @@ func (d *Diagram) DrawBranches() {
 			}
 		}
 
-		// x2 := d.TimeToX(b.End)
+		x2 := d.Width
+		if !b.End.IsZero() {
+			x2 = d.TimeToX(b.End)
+		}
 
 		// Arrow
-		d.Canvas.Line(x1, y, d.Width-10, y, stroke, ArrowForBranch(b))
+		d.Canvas.Line(x1, y, x2-10, y, stroke, ArrowForBranch(b))
 	}
 }
 
@@ -128,7 +131,12 @@ func (d *Diagram) TimeToX(t time.Time) int {
 		xOff := int(t.Sub(d.Start).Hours()) / 24
 		x = x + xOff*dx
 	}
-	return x
+
+	if x > d.Width {
+		return d.Width
+	} else {
+		return x
+	}
 }
 
 func (d *Diagram) DrawMerges() {
