@@ -80,6 +80,8 @@ func (d *Diagram) DrawWeekBars() {
 	d.Canvas.Rect(0, d.Height-20, d.LabelWidth, 20, `fill="#79F"`, `stroke="black"`)
 	d.Canvas.Text(0+d.LabelWidth/2, d.Height-5, "Past", textStyle...)
 
+	// d.Canvas.Line(d.LabelWidth, 0, d.LabelWidth, d.Height, `stroke="black"`)
+
 	we := ToWeekEnd(d.Start)
 	dw := (d.Width - d.LabelWidth) / d.Weeks
 	for i := 0; i < d.Weeks; i++ {
@@ -99,10 +101,11 @@ func (d *Diagram) DrawWeekBars() {
 func (d *Diagram) DrawBranches() {
 	for _, b := range d.Branches {
 		y := b.Order * d.YOffset
-
-		d.Canvas.Text(10, y+5, b.Name, `font-family="arial"`)
-
 		stroke := StrokeForBranch(b)
+
+		d.Canvas.Text(10, y+5, b.Name,
+			`font-family="arial"`,
+			fmt.Sprintf(`fill="%s"`, b.BranchType.ToColour()))
 
 		x1 := d.TimeToX(b.Start)
 		if x1 > d.LabelWidth {
@@ -120,7 +123,7 @@ func (d *Diagram) DrawBranches() {
 		}
 
 		// Arrow
-		d.Canvas.Line(x1, y, x2-10, y, stroke, ArrowForBranch(b))
+		d.Canvas.Line(x1, y, x2-9, y, stroke, ArrowForBranch(b))
 	}
 }
 
@@ -150,9 +153,9 @@ func (d *Diagram) DrawMerges() {
 
 		// Offset y2 for arrow
 		if y2 > y1 {
-			y2 = y2 - 10
+			y2 = y2 - 9
 		} else {
-			y2 = y2 + 10
+			y2 = y2 + 9
 		}
 
 		d.Canvas.Line(x, y1, x, y2,
