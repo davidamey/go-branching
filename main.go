@@ -12,6 +12,6 @@ func main() {
 	}
 	defer w.Close()
 
-	d := NewDiagram("ngba.json", w)
+	d := NewDiagram("example.json", w)
 	d.Draw()
 }
