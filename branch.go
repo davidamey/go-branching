@@ -56,14 +56,9 @@ func (this *Branches) UnmarshalJSON(b []byte) error {
 	}
 
 	for i, b := range branches {
-		branches[i].Order = i + 1
+		branches[i].Order = i
 		branches[i].Parent = (*this)[b.ParentName]
 	}
 
 	return nil
 }
-
-// func (branch *Branch) UnmarshalJSON(b []byte) error {
-// 	fmt.Println("Branch Unmarshal")
-// 	return nil
-// }
